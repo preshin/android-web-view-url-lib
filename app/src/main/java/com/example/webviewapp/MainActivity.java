@@ -3,14 +3,16 @@ package com.example.webviewapp;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.android_web_view_url_lib.WebUrlView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements WebUrlView.WebViewCallback {
 
     private Button openWebViewButton;
+    private LinearLayout webUrlContainer;
     private WebUrlView webUrlView;
 
     @Override
@@ -19,24 +21,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         openWebViewButton = findViewById(R.id.openWebViewButton);
-        webUrlView = findViewById(R.id.webUrlView);
+        webUrlContainer = findViewById(R.id.webUrlContainer);
 
         openWebViewButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openWebViewButton.setVisibility(View.GONE);
-                webUrlView.setVisibility(View.VISIBLE);
-                String url = "https://chatbot-r3.deepconverse.com/?draft=true&hostname=dcstg23-calendly.deepconverse.com";
+                if (webUrlView != null) {
+                    // Remove the existing WebUrlView if present
+                    webUrlContainer.removeView(webUrlView);
+                    webUrlView.destroyView();
+                }
+
+                // Create a new instance of WebUrlView
+                webUrlView = new WebUrlView(MainActivity.this);
+                webUrlView.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT));
+                webUrlView.setWebViewCallback(MainActivity.this);
+                String url = "https://cdn.converseapps.com/v1/assets/widget/embedded-chatbot?draft=true&hostname=dcstg5-preshin-19.deepconverse.com";
                 webUrlView.loadUrl(url);
+                webUrlContainer.addView(webUrlView);
+
+                // Show the webUrlContainer and trigger a layout pass
+                webUrlContainer.setVisibility(View.VISIBLE);
+                webUrlContainer.requestLayout();
             }
         });
+    }
 
-//        webUrlView.setWebViewCloseListener(new WebUrlView.WebViewCloseListener() {
-//            @Override
-//            public void onWebViewClose() {
-//                openWebViewButton.setVisibility(View.VISIBLE);
-//                webUrlView.setVisibility(View.GONE);
-//            }
-//        });
+    @Override
+    public void onViewClosed() {
+        // Remove the WebUrlView from the container
+        if (webUrlView != null) {
+            webUrlContainer.removeView(webUrlView);
+            webUrlView.destroyView();
+            webUrlView = null;
+            webUrlContainer.setVisibility(View.GONE);
+        }
     }
 }
